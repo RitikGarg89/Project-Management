@@ -1,0 +1,23 @@
+{
+  "name": "projectmanagement",
+  "version": "1.0.0",
+  "description": "A project management application for beginners",
+  "homepage": "https://github.com/RitikGarg89/Project-Management#readme",
+  "bugs": {
+    "url": "https://github.com/RitikGarg89/Project-Management/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RitikGarg89/Project-Management.git"
+  },
+  "license": "ISC",
+  "author": "Ritik Garg",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "devDependencies": {
+    "prettier": "3.9.6"
+  }
+}
