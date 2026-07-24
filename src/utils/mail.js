@@ -1,7 +1,7 @@
 import Mailgen from 'mailgen'
 import nodemailer from 'nodemailer'
 
-const sendEmail = async (options) =>{
+const sendEmail = async (options) => {
     const mailGenerator = new Mailgen({
         theme: "default",
         product: {
@@ -11,11 +11,11 @@ const sendEmail = async (options) =>{
     })
 
     const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent)
-    const emailHtml = mailGenerator.generatePlaintext(options.mailgenContent)
+    const emailHtml = mailGenerator.generate(options.mailgenContent)
 
     const trasporter = nodemailer.createTransport({
         host: process.env.MAIL_TRAP_SMTP_HOST,
-        pool: process.env.MAIL_TRAP_SMTP_PORT,
+        port: process.env.MAIL_TRAP_SMTP_PORT,
         auth: {
             user: process.env.MAIL_TRAP_SMTP_USER,
             pass: process.env.MAIL_TRAP_SMTP_PASS
@@ -39,13 +39,13 @@ const sendEmail = async (options) =>{
     }
 }
 
-const emailVerificationMailgenContent= (username,verificationUrl) =>{
+const emailVerificationMailgenContent = (username, verificationUrl) => {
     return {
         body: {
             name: username,
             intro: "Welcome to our App! we're excited o have you on board.",
             action: {
-                instructions:"To Verify your email please click on the following button",
+                instructions: "To Verify your email please click on the following button",
                 button: {
                     color: "#5970f6",
                     text: "Verify your Email",
@@ -57,13 +57,13 @@ const emailVerificationMailgenContent= (username,verificationUrl) =>{
     }
 };
 
-const forgotPasswordMailgenContent= (username,passwordResetUrl) =>{
+const forgotPasswordMailgenContent = (username, passwordResetUrl) => {
     return {
         body: {
             name: username,
             intro: "We got a request to reset the password of your account",
             action: {
-                instructions:"To Reset your password click on the following button",
+                instructions: "To Reset your password click on the following button",
                 button: {
                     color: "#4ecf50",
                     text: "Reset Password",
