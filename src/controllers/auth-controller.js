@@ -4,6 +4,7 @@ import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/asyn-handler.js"
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js"
 import { validate } from "../middlewares/validator-middleware.js"
+import jwt from "jsonwebtoken"
 
 const generateAccessandRefreshToken = async (userId) => {
     try {
@@ -151,7 +152,38 @@ const resentEmailVerification = asyncHandler(async (req, res) => {
         ),
     });
 
-    return res.status(200).json(new ApiResponse(200, { user: createdUser }, "User registered Successfully and verification email has been sent on your email"))
+    return res.status(200).json(new ApiResponse(200, {}, "User registered Successfully and verification email has been sent on your email"))
+})
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+    if (!incomingRefreshToken) {
+        throw new ApiError(401, "Unauthorized")
+    }
+    try {
+        const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+        const user = await User.findById(decodedToken._id)
+        if (!user) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+        if (user.refreshToken !== incomingRefreshToken) {
+            throw new ApiError(401, "Invalid refresh token")
+        }
+        const options = {
+            httpOnly: true,
+            secure: true,
+        }
+        const { accessToken, refreshToken: newRefreshToken } = await generateAccessandRefreshToken(user._id)
+        user.refreshToken = newRefreshToken
+        await user.save({ validateBeforeSave: false })
+        return res
+            .status(200)
+            .cookie("accessToken", accessToken, options)
+            .cookie("refreshToken", newRefreshToken, options)
+            .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "User refreshed successfully"))
+    } catch (error) {
+        throw new ApiError(401, "Invalid refresh token")
+    }
 })
 
 
