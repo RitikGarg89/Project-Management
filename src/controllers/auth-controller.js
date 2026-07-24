@@ -3,6 +3,7 @@ import { ApiResponse } from "../utils/api-response.js"
 import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/asyn-handler.js"
 import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js"
+import { validate } from "../middlewares/validator-middleware.js"
 
 const generateAccessandRefreshToken = async (userId) => {
     try {
@@ -104,4 +105,28 @@ const logoutUser = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, {}, "User logged out successfully"))
 })
 
-export { registerUser, login, logoutUser }
+const getCurrentUser = asyncHandler(async (req, res) => {
+    return res
+        .status(200)
+        .json(new ApiResponse(200, req.user, "User fetched successfully"))
+})
+
+const verifyEmail = asyncHandler(async (req, res) => {
+    const { verificationToken } = req.params;
+    if (!verificationToken) {
+        throw new ApiError(404, "Email Verification is missing or invalid")
+    }
+    let hashedToken = crypto.createHash("sha256").update(verificationToken).digest("hex")
+    const user = await User.findOne({ emailVerificationToken: hashedToken, emailVerificationExpiry: { $gt: Date.now() } })
+    if (!user) {
+        throw new ApiError(400, "Token is invalid or expired")
+    }
+    user.isEmailVerified = true;
+    user.emailVerificationToken = undefined;
+    user.emailVerificationExpiry = undefined;
+    await user.save({ validateBeforeSave: false })
+
+})
+
+
+export { registerUser, login, logoutUser, getCurrentUser, verifyEmail }
