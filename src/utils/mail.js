@@ -1,4 +1,43 @@
 import Mailgen from 'mailgen'
+import nodemailer from 'nodemailer'
+
+const sendEmail = async (options) =>{
+    const mailGenerator = new Mailgen({
+        theme: "default",
+        product: {
+            name: "Task Manager",
+            link: "https://taskmanagelink.com"
+        }
+    })
+
+    const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent)
+    const emailHtml = mailGenerator.generatePlaintext(options.mailgenContent)
+
+    const trasporter = nodemailer.createTransport({
+        host: process.env.MAIL_TRAP_SMTP_HOST,
+        pool: process.env.MAIL_TRAP_SMTP_PORT,
+        auth: {
+            user: process.env.MAIL_TRAP_SMTP_USER,
+            pass: process.env.MAIL_TRAP_SMTP_PASS
+        }
+    })
+
+    const mail = {
+        from: "mail.taskmanager@example.com",
+        to: options.email,
+        subject: options.subject,
+        text: emailTextual,
+        html: emailHtml
+    }
+
+
+    try {
+        await trasporter.sendMail(mail)
+    } catch (error) {
+        console.log("Emqail service Failled silently. Make sure that you have provided your mailtrap credentials in the .env file");
+        console.log("Error: ", error)
+    }
+}
 
 const emailVerificationMailgenContent= (username,verificationUrl) =>{
     return {
@@ -38,5 +77,6 @@ const forgotPasswordMailgenContent= (username,passwordResetUrl) =>{
 
 export {
     emailVerificationMailgenContent,
-    forgotPasswordMailgenContent
-};
+    forgotPasswordMailgenContent,
+    sendEmail
+}; 
