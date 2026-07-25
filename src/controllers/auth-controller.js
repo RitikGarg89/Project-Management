@@ -187,4 +187,12 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 
-export { registerUser, login, logoutUser, getCurrentUser, verifyEmail, resentEmailVerification }
+const forgotPasswordRequest = asyncHandler(async (req,res) => {
+    const {email} = req.body;
+    const user = await User.findOne({email})
+    if(!user){
+       throw new ApiError(404,"User nt find") 
+    }
+})
+
+export { registerUser, login, logoutUser, getCurrentUser, verifyEmail, resentEmailVerification, refreshAccessToken }

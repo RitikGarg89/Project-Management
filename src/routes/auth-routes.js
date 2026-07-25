@@ -11,7 +11,7 @@ const router = Router();
 router.route("/register").post(userRegisterValidator(), validate, registerUser)
 router.route("/login").post(userLoginValidator(), validate, login)
 // secure routes
-router.route("/logout").post(verifyJWt(), logoutUser)
+router.route("/logout").post(verifyJWt, logoutUser)
 
 
 export default router;
