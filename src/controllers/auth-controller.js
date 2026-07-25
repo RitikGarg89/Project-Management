@@ -2,7 +2,7 @@ import { User } from "../models/user-model.js"
 import { ApiResponse } from "../utils/api-response.js"
 import { ApiError } from "../utils/api-error.js"
 import { asyncHandler } from "../utils/asyn-handler.js"
-import { emailVerificationMailgenContent, sendEmail } from "../utils/mail.js"
+import { emailVerificationMailgenContent, forgotPasswordMailgenContent, sendEmail } from "../utils/mail.js"
 import { validate } from "../middlewares/validator-middleware.js"
 import jwt from "jsonwebtoken"
 
@@ -187,12 +187,31 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 })
 
 
-const forgotPasswordRequest = asyncHandler(async (req,res) => {
-    const {email} = req.body;
-    const user = await User.findOne({email})
-    if(!user){
-       throw new ApiError(404,"User nt find") 
+const forgotPasswordRequest = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email })
+    if (!user) {
+        throw new ApiError(404, "User does not exist", {})
     }
+
+    const { unHashedToken, hashedToken, tokenExpiry } = user.generateAccessToken()
+    user.forgotPasswordToken = hashedToken
+    user.forgotPasswordExpiry = tokenExpiry
+    await user.save({ validateBeforeSave: false })
+
+    await sendEmail({
+        email: user ? user.email : "",
+        subject: "Please verify your email",
+        mailgenContent: forgotPasswordMailgenContent(
+            user.username,
+            `${process.env.FORGOT_PASSWORD_REDIRECT_URL}/${unHashedToken}`,
+
+        ),
+    });
+
+
+
+    return res.status(200).json(new ApiResponse(200, {}, "User registered Successfully and verification email has been sent on your email"))
 })
 
 export { registerUser, login, logoutUser, getCurrentUser, verifyEmail, resentEmailVerification, refreshAccessToken }
